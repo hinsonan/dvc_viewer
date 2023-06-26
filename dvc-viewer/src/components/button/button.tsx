@@ -27,10 +27,14 @@ const CustomButton = styled(Button)({
     },
   });
 
-export default function BasicButton() {
+type CustomButtonProps = {
+  onClick: () => void; // Define the type for the custom function prop
+};
+
+export default function BasicButton({ onClick }: CustomButtonProps) {
   return (
     <Stack spacing={2} direction="row">
-      <CustomButton variant="contained">Scan DVC Repo</CustomButton>
+      <CustomButton variant="contained" onClick={onClick}>Scan DVC Repo</CustomButton>
     </Stack>
   );
 }
