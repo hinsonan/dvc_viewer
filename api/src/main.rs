@@ -1,43 +1,17 @@
 #[macro_use] extern crate rocket;
 extern crate serde_json;
-use rocket::serde::{Deserialize, Serialize};
 use rocket::response::stream::{EventStream, Event};
 use rocket::serde::json::Json;
 use rocket::form::Form;
 use rocket::tokio::time::{self, Duration};
 use rocket::http::Method;
 use rocket_cors::{AllowedOrigins, CorsOptions};
-use std::fs;
 
-#[derive(Serialize)]
-struct FileListing{
-    files: Vec<String>
-}
-
-#[derive(rocket::FromForm)]
-struct FormData{
-    name: String,
-    age: i8
-}
-
-fn display_files(dir_path: &str) -> Vec<String>{
-    let mut string_list: Vec<String> = Vec::new();
-    match fs::read_dir(dir_path) {
-        Ok(entries) => {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    if let Ok(file_name) = entry.file_name().into_string() {
-                        string_list.push(file_name);
-                    }
-                }
-            }
-        }
-        Err(err) => {
-            eprintln!("Error reading directory: {}", err);
-        }
-    }
-    return string_list;
-}
+mod utils;
+use utils::FileListing;
+use utils::FormData;
+use utils::display_files;
+use utils::git_clone;
 
 
 #[get("/")]
@@ -76,6 +50,12 @@ fn stream() -> EventStream![] {
     }
 }
 
+#[post("/clone", data = "<payload>")]
+fn clone(payload: String) -> rocket::response::status::Accepted<String> {
+    git_clone(payload);
+    return rocket::response::status::Accepted(Some(format!("Cloned Successfully")))
+}
+
 #[launch]
 fn rocket() -> _ {
     let cors = CorsOptions::default()
@@ -87,5 +67,5 @@ fn rocket() -> _ {
             .collect(),
     )
     .allow_credentials(true);
-    rocket::build().attach(cors.to_cors().unwrap()).mount("/", routes![index,files,send_data,stream])
+    rocket::build().attach(cors.to_cors().unwrap()).mount("/", routes![index,files,send_data,stream,clone])
 }
