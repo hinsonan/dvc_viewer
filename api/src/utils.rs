@@ -1,6 +1,10 @@
+use rocket::Data;
 use rocket::serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::Read;
 use std::process::Command;
+use std::path::Path;
+use serde_yaml;
 
 #[derive(Serialize)]
 pub struct FileListing{
@@ -46,14 +50,43 @@ pub fn git_clone(git_repo: String){
     }
 }
 
-pub fn parse_dvc_data_registry(dvc_dir:String){
-    #[derive(Serialize)]
-    struct DataCategory{
-        md5: String,
-        size: i64,
-        nfiles: i32,
-        path: String
-    }
+#[derive(Serialize,Deserialize)]
+struct DataCategory{
+    md5: String,
+    size: i64,
+    nfiles: i32,
+    path: String
+}
 
-    
+fn parse_dvc_data_registry(dvc_dir: &Path) -> Vec<DataCategory>{
+    fn parse_dvc_file(file_path: &Path) -> DataCategory {
+        let mut file = fs::File::open(file_path).expect("Failed to open file");
+        let mut content = String::new();
+        file.read_to_string(&mut content).expect("Failed to read file");
+
+        let data_category: DataCategory = serde_yaml::from_str(&content).expect("Failed to parse YAML");
+        return data_category
+
+    }
+    let mut dvc_datasets: Vec<DataCategory> = Vec::new();
+
+    let mut recursive_dir_search = || {
+        if let Ok(entries) = fs::read_dir(dvc_dir) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        parse_dvc_data_registry(&path);
+                    } else if let Some(extension) = path.extension() {
+                        if extension == "dvc" {
+                            let dvc_dataset = parse_dvc_file(&path);
+                            dvc_datasets.push(dvc_dataset)
+                        }
+                    }
+                }
+            }
+        }
+    };
+    recursive_dir_search();
+    return dvc_datasets
 }
