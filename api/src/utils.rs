@@ -1,10 +1,12 @@
-use rocket::Data;
 use rocket::serde::{Deserialize, Serialize};
 use std::fs;
+use std::fmt;
 use std::io::Read;
 use std::process::Command;
 use std::path::Path;
 use serde_yaml;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 #[derive(Serialize)]
 pub struct FileListing{
@@ -50,23 +52,49 @@ pub fn git_clone(git_repo: String){
     }
 }
 
-#[derive(Serialize,Deserialize)]
-struct DataCategory{
-    md5: String,
-    size: i64,
-    nfiles: i32,
-    path: String
+#[derive(Serialize)]
+pub struct DataCategory{
+    pub path: Option<String>,
+    pub md5: Option<String>,
+    pub size: Option<i64>,
+    pub desc: Option<String>,
+    pub remote: Option<String>,
 }
 
-fn parse_dvc_data_registry(dvc_dir: &Path) -> Vec<DataCategory>{
+pub fn parse_dvc_data_registry(dvc_dir: &Path) -> Vec<DataCategory>{
     fn parse_dvc_file(file_path: &Path) -> DataCategory {
-        let mut file = fs::File::open(file_path).expect("Failed to open file");
-        let mut content = String::new();
-        file.read_to_string(&mut content).expect("Failed to read file");
-
-        let data_category: DataCategory = serde_yaml::from_str(&content).expect("Failed to parse YAML");
+        let mut data_category = DataCategory {
+            path: None,
+            md5: None,
+            size: None,
+            desc: None,
+            remote: None,
+        };
+    
+        if let Ok(file) = File::open(file_path) {
+            let reader = BufReader::new(file);
+    
+            for line in reader.lines() {
+                if let Ok(line) = line {
+                    let parts: Vec<&str> = line.split(": ").collect();
+                    if parts.len() == 2 {
+                        let key = parts[0];
+                        let value = parts[1];
+    
+                        match key {
+                            "- path" => data_category.path = Some(value.to_string()),
+                            "  md5" => data_category.md5 = Some(value.to_string()),
+                            "  size" => data_category.size = value.parse().ok(),
+                            "  desc" => data_category.desc = Some(value.to_string()),
+                            "  remote" => data_category.remote = Some(value.to_string()),
+                            _ => (),
+                        }
+                    }
+                }
+            }
+        }
+        let x = 1;
         return data_category
-
     }
     let mut dvc_datasets: Vec<DataCategory> = Vec::new();
 
@@ -76,7 +104,8 @@ fn parse_dvc_data_registry(dvc_dir: &Path) -> Vec<DataCategory>{
                 if let Ok(entry) = entry {
                     let path = entry.path();
                     if path.is_dir() {
-                        parse_dvc_data_registry(&path);
+                        let sub_datasets = parse_dvc_data_registry(&path);
+                        dvc_datasets.extend(sub_datasets);
                     } else if let Some(extension) = path.extension() {
                         if extension == "dvc" {
                             let dvc_dataset = parse_dvc_file(&path);
@@ -89,4 +118,23 @@ fn parse_dvc_data_registry(dvc_dir: &Path) -> Vec<DataCategory>{
     };
     recursive_dir_search();
     return dvc_datasets
+}
+
+mod tests {
+    impl fmt::Debug for DataCategory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Path: {}", self.path.as_ref().map(String::as_str).unwrap_or_default())?;
+        writeln!(f, "MD5: {}", self.md5.as_ref().map(String::as_str).unwrap_or_default())?;
+        writeln!(f, "Size: {}", self.size.unwrap_or_default())?;
+        writeln!(f, "Desc: {}", self.desc.as_ref().map(String::as_str).unwrap_or_default())?;
+        writeln!(f, "Remote: {}", self.remote.as_ref().map(String::as_str).unwrap_or_default())?;
+        Ok(())
+    }
+}
+    use super::*;
+    #[test]
+    fn test_parse_dvc_data_registry() {
+        let res = super::parse_dvc_data_registry(&Path::new("dataset-registry"));
+        println!("Vector {:?}", res);
+    }
 }

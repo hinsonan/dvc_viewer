@@ -6,12 +6,15 @@ use rocket::form::Form;
 use rocket::tokio::time::{self, Duration};
 use rocket::http::Method;
 use rocket_cors::{AllowedOrigins, CorsOptions};
+use std::path::Path;
 
 mod utils;
 use utils::FileListing;
 use utils::FormData;
+use utils::DataCategory;
 use utils::display_files;
 use utils::git_clone;
+use utils::parse_dvc_data_registry;
 
 
 #[get("/")]
@@ -51,9 +54,10 @@ fn stream() -> EventStream![] {
 }
 
 #[post("/clone", data = "<payload>")]
-fn clone(payload: String) -> rocket::response::status::Accepted<String> {
+fn clone(payload: String) -> Json<Vec<DataCategory>> {
     git_clone(payload);
-    return rocket::response::status::Accepted(Some(format!("Cloned Successfully")))
+    let dvc_datasets = parse_dvc_data_registry(&Path::new("dataset-registry"));
+    return Json(dvc_datasets);
 }
 
 #[launch]
