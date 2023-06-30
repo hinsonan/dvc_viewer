@@ -13,26 +13,51 @@ const darkTheme = createTheme({
     },
 });
 
-export default function SimpleAccordion() {
+
+export interface DataItem {
+    title: string;
+    path: string;
+    md5: string;
+    size: number;
+    nfiles: number | null;
+    desc: string;
+    remote: string;
+}
+
+interface DataListProps {
+    data: DataItem[];
+}
+
+export default function SimpleAccordion({ data }: DataListProps) {
     return (
         <div>
-            <ThemeProvider theme={darkTheme}>
-                <Accordion>
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel1a-content"
-                        id="panel1a-header"
-                    >
-                        <Typography>Accordion 1</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <Typography>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-                            malesuada lacus ex, sit amet blandit leo lobortis eget.
-                        </Typography>
-                    </AccordionDetails>
-                </Accordion>
-            </ThemeProvider>
+            {data.map((item, index) => (
+                <div className="p-1">
+                    <ThemeProvider theme={darkTheme}>
+                        <Accordion>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel1a-content"
+                                id="panel1a-header"
+                            >
+                                <Typography>{item.title}</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Typography>
+                                    <ul>
+                                        <li>Path: {item.path}</li>
+                                        <li>MD5: {item.md5}</li>
+                                        <li>Size: {item.size ? (item.size / (1024 * 1024 * 1024)).toFixed(2).toString() + " GB" : "N/A"}</li>
+                                        <li>Number of Files: {item.nfiles}</li>
+                                        <li>Description: {item.desc}</li>
+                                        <li>Remote: {item.remote}</li>
+                                    </ul>
+                                </Typography>
+                            </AccordionDetails>
+                        </Accordion>
+                    </ThemeProvider>
+                </div>
+            ))}
         </div>
     );
 }

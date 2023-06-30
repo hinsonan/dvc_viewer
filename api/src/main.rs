@@ -55,7 +55,12 @@ fn stream() -> EventStream![] {
 
 #[post("/clone", data = "<payload>")]
 fn clone(payload: String) -> Json<Vec<DataCategory>> {
-    git_clone(payload);
+    let url_parsed: Vec<&str> = payload.split("/").collect();
+    if let Some(last_element) = url_parsed.last(){
+        if !Path::new(&last_element).exists(){
+            git_clone(payload);
+        }
+    }
     let dvc_datasets = parse_dvc_data_registry(&Path::new("dataset-registry"));
     return Json(dvc_datasets);
 }

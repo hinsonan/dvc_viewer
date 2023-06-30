@@ -2,7 +2,11 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 
-export default function BasicTextFields() {
+interface BasicTextFieldsProps {
+  onUrlChange: (url: string) => void;
+}
+
+export default function BasicTextFields({ onUrlChange }: BasicTextFieldsProps) {
   const [url, setUrl] = React.useState('');
   const [isValidUrl, setIsValidUrl] = React.useState(true);
 
@@ -19,6 +23,9 @@ export default function BasicTextFields() {
 
     // Check if the input value is a valid URL
     setIsValidUrl(checkUrlValidity(inputValue));
+
+    // Invoke the callback function passed from the parent component
+    onUrlChange(inputValue);
   };
 
   return (

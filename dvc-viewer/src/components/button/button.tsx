@@ -28,7 +28,7 @@ const CustomButton = styled(Button)({
   });
 
 type CustomButtonProps = {
-  onClick: () => void; // Define the type for the custom function prop
+  onClick: () => Promise<void>; // Define the type for the custom function prop
 };
 
 export default function BasicButton({ onClick }: CustomButtonProps) {

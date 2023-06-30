@@ -1,35 +1,43 @@
 'use client'
 import { useState, useEffect } from 'react';
-import SimpleAccordion from '@/components/accordian/accordian';
+import SimpleAccordion, {DataItem} from '@/components/accordian/accordian';
 import BasicButton from '@/components/button/button';
 import Navbar from '@/components/navbar/navbar';
 import BasicTextFields from '@/components/text_input/basic_text_input';
 
 export default function Home() {
-  const [toggle, setData] = useState<number>(0);
+  const [data, setDvcData] = useState<DataItem[]>([]);
+  const [textFieldValue, setTextFieldValue] = useState('');
 
-  const handleClick = () => {
-    console.log('Custom button clicked');
-    // Perform any other action or logic here
-    const eventSource = new EventSource('http://localhost:8000/events');
+  const handleClick = async () => {
 
-    eventSource.onmessage = (event) => {
-      const data = event.data;
-      console.log(data);
-      if (data === "ping"){
-        eventSource.close();
-        toggle > 0 ? setData(0): setData(1);
+    try {
+      console.log(JSON.stringify(textFieldValue.trimEnd()))
+      const response = await fetch('http://127.0.0.1:8000/clone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: textFieldValue.trim(),
+      });
+
+      if (response.ok) {
+        // Handle successful response
+        setDvcData(await response.json())
+        console.log('Post created successfully');
+        console.log(data)
+      } else {
+        // Handle error response
+        console.log('Failed to create post');
       }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error(error);
-    };
-
-    // Clean up the EventSource when the component unmounts
-    return () => {
-      eventSource.close();
-    };
+    } catch (error) {
+      // Handle fetch error
+      console.error('Error:', error);
+    }
+  };
+  const handleUrlChange = (newUrl: string) => {
+    // Update the url state in the parent component
+    setTextFieldValue(newUrl);
   };
 
   return (
@@ -37,12 +45,12 @@ export default function Home() {
       <Navbar />
       <main className="flex flex-col items-center justify-between p-24">
         <div>
-          <BasicTextFields />
+          <BasicTextFields onUrlChange={handleUrlChange}/>
           <div className="flex flex-col float-right">
             <BasicButton onClick={handleClick}/>
           </div>
         </div>
-        {toggle !== 0 && <SimpleAccordion />}
+        {data.length !== 0 && <SimpleAccordion data={data}/>}
       </main>
     </div>
   )
