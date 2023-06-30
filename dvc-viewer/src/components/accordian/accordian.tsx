@@ -32,7 +32,7 @@ export default function SimpleAccordion({ data }: DataListProps) {
     return (
         <div>
             {data.map((item, index) => (
-                <div className="p-1">
+                <div className="p-1" key={index}>
                     <ThemeProvider theme={darkTheme}>
                         <Accordion>
                             <AccordionSummary
