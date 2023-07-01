@@ -57,12 +57,15 @@ fn stream() -> EventStream![] {
 fn clone(payload: String) -> Json<Vec<DataCategory>> {
     let url_parsed: Vec<&str> = payload.split("/").collect();
     if let Some(last_element) = url_parsed.last(){
-        if !Path::new(&last_element).exists(){
-            git_clone(payload);
+        let dir_name = Path::new(last_element.strip_suffix(".git").unwrap_or(last_element));
+        dbg!(dir_name);
+        if !dir_name.exists(){
+            git_clone(payload.clone());
         }
+        let dvc_datasets = parse_dvc_data_registry(&Path::new(dir_name));
+        return Json(dvc_datasets);
     }
-    let dvc_datasets = parse_dvc_data_registry(&Path::new("dataset-registry"));
-    return Json(dvc_datasets);
+    return Json(vec![]);
 }
 
 #[launch]
