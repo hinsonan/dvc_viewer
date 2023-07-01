@@ -58,7 +58,6 @@ fn clone(payload: String) -> Json<Vec<DataCategory>> {
     let url_parsed: Vec<&str> = payload.split("/").collect();
     if let Some(last_element) = url_parsed.last(){
         let dir_name = Path::new(last_element.strip_suffix(".git").unwrap_or(last_element));
-        dbg!(dir_name);
         if !dir_name.exists(){
             git_clone(payload.clone());
         }

@@ -40,7 +40,7 @@ export default function SimpleAccordion({ data }: DataListProps) {
                                 aria-controls="panel1a-content"
                                 id="panel1a-header"
                             >
-                                <Typography>{item.title}</Typography>
+                                <Typography>{item.title.replace("dataset-registry/","")}</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Typography>
