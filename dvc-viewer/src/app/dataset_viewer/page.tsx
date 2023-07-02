@@ -25,7 +25,6 @@ export default function Home() {
         // Handle successful response
         setDvcData(await response.json())
         console.log('Post created successfully');
-        console.log(data)
       } else {
         // Handle error response
         console.log('Failed to create post');
