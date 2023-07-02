@@ -1,0 +1,15 @@
+version: '3'
+services:
+  rust-app:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+  
+  nextjs-app:
+    build:
+      context: ./dvc-viewer
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
