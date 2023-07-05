@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -29,10 +30,16 @@ interface DataListProps {
 }
 
 export default function SimpleAccordion({ data }: DataListProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     return (
         <div>
             {data.map((item, index) => (
-                <div className="p-1" key={index}>
+                <div className={`p-1 accordion-container ${mounted ? 'fade-in' : ''} accord`} key={index}>
                     <ThemeProvider theme={darkTheme}>
                         <Accordion>
                             <AccordionSummary
@@ -58,6 +65,23 @@ export default function SimpleAccordion({ data }: DataListProps) {
                     </ThemeProvider>
                 </div>
             ))}
+            <style jsx>{`
+        .accordion-container {
+            opacity: 0;
+          }
+        .fade-in {
+            animation: fade 1s ease-in-out forwards;
+          }
+  
+          @keyframes fade {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+      `}</style>
         </div>
     );
 }
